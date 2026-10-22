@@ -32,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+!.vscode/
+!.vscode/tasks.json
+!.vscode/settings.json

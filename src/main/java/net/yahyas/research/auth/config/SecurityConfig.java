@@ -29,6 +29,7 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/api/auth/**").permitAll()
+				.requestMatchers("/ws/writing-assistant").permitAll()
 				.anyRequest().authenticated())
 			.oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt ->
 				jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

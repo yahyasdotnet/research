@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Initialize Local Environment",
+      "type": "process",
+      "command": "bash",
+      "args": ["scripts/init-local-env.sh"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Maven Compile",
+      "type": "process",
+      "command": "bash",
+      "args": ["./mvnw", "-q", "-DskipTests", "compile"],
+      "windows": {
+        "command": "${workspaceFolder}\\mvnw.cmd",
+        "args": ["-q", "-DskipTests", "compile"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Maven Tests",
+      "type": "process",
+      "command": "bash",
+      "args": ["./mvnw", "test"],
+      "windows": {
+        "command": "${workspaceFolder}\\mvnw.cmd",
+        "args": ["test"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Maven Package",
+      "type": "process",
+      "command": "bash",
+      "args": ["./mvnw", "package"],
+      "windows": {
+        "command": "${workspaceFolder}\\mvnw.cmd",
+        "args": ["package"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Container Jar",
+      "type": "process",
+      "command": "bash",
+      "args": ["./mvnw", "-DskipTests", "package"],
+      "windows": {
+        "command": "${workspaceFolder}\\mvnw.cmd",
+        "args": ["-DskipTests", "package"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate Compose Configuration",
+      "type": "process",
+      "command": "docker",
+      "args": ["compose", "config", "--quiet"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Prepare Ollama Model",
+      "type": "process",
+      "command": "ollama",
+      "args": ["pull", "llama3.2"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Project",
+      "type": "process",
+      "dependsOn": "Build Container Jar",
+      "dependsOrder": "sequence",
+      "command": "docker",
+      "args": ["compose", "up", "--build", "-d"],
+      "problemMatcher": []
+    },
+    {
+      "label": "View Project Logs",
+      "type": "process",
+      "command": "docker",
+      "args": ["compose", "logs", "-f", "research"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Project",
+      "type": "process",
+      "command": "docker",
+      "args": ["compose", "stop"],
+      "problemMatcher": []
+    }
+  ]
+}
