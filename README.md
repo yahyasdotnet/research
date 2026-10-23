@@ -56,43 +56,47 @@ The writing assistant searches the web through Firecrawl, checks claims against 
 
 ## System Architecture
 
+```mermaid
+
+
 flowchart TB
-    U["User"] --> UI["Web Interface"]
-    UI --> AUTH["Authentication REST API"]
-    AUTH --> AS["Auth Service"]
-    AS --> JPA["Spring Data JPA"]
-    JPA --> DB[("PostgreSQL")]
-    AS --> JWT["JWT Bearer Token"]
-    JWT --> UI
+    U(["👤 User"])
 
-    UI --> WS["WebSocket Writing Assistant"]
-    WS --> VALIDATE["JWT Validation"]
-    VALIDATE --> ASSIST["Writing Assistant Service"]
-    ASSIST --> DEBOUNCE["Debounce and Stale Result Control"]
+    subgraph FRONTEND["PRESENTATION LAYER"]
+        direction TB
+        FE["🖥️ Web Interface<br/>Writing Editor · Research UI"]
+    end
 
-    DEBOUNCE --> SEARCH["Source Search"]
-    DEBOUNCE --> FACT["Fact Checking"]
-    DEBOUNCE --> GRAMMAR["Grammar and Editing"]
+    subgraph BACKEND["APPLICATION LAYER"]
+        direction TB
+        BE["⚙️ Spring Boot<br/>REST API · WebSocket · JWT Authentication"]
+        AI["✨ Writing Assistant<br/>Spring AI · Search · Fact-Checking · Grammar"]
+        BE --> AI
+    end
 
-    SEARCH --> FC["Firecrawl API"]
-    FACT --> FC
-    FC --> WEB["Web Search Sources"]
+    subgraph SERVICES["DATA & AI LAYER"]
+        direction LR
+        DB[("🐘 PostgreSQL")]
+        LLM["🤖 Ollama<br/>LLM or an API (Claude, Gemini etc)"]
+        WEB["🔎 Firecrawl<br/>Web Search"]
+    end
 
-    FACT --> AI["Spring AI"]
-    GRAMMAR --> AI
-    AI --> OLLAMA["Ollama LLM"]
+    U <--> FE
+    FE <--> BE
+    AI <--> DB
+    AI <--> LLM
+    AI <--> WEB
 
-    COMPOSE["Docker Compose"] -.-> APP["Spring Boot Container"]
-    COMPOSE -.-> PG["PostgreSQL Container"]
-    APP -.-> WS
-    PG -.-> DB
+    classDef frontend fill:#172554,stroke:#60a5fa,color:#eff6ff,stroke-width:2px
+    classDef backend fill:#14532d,stroke:#4ade80,color:#f0fdf4,stroke-width:2px
+    classDef services fill:#422006,stroke:#fbbf24,color:#fffbeb,stroke-width:2px
+    classDef user fill:#334155,stroke:#cbd5e1,color:#ffffff,stroke-width:2px
 
-    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
-    classDef backend fill:#dcfce7,stroke:#16a34a,color:#14532d
-    classDef external fill:#fef3c7,stroke:#d97706,color:#78350f
-    classDef database fill:#f3e8ff,stroke:#9333ea,color:#581c87
+    class FE frontend
+    class BE,AI backend
+    class DB,LLM,WEB services
+    class U user
 
-    class U,UI frontend
-    class AUTH,AS,JWT,WS,VALIDATE,ASSIST,DEBOUNCE,SEARCH,FACT,GRAMMAR backend
-    class FC,WEB,AI,OLLAMA external
-    class JPA,DB database
+    style FRONTEND fill:#0f172a,stroke:#3b82f6,stroke-width:1px,color:#93c5fd
+    style BACKEND fill:#052e16,stroke:#22c55e,stroke-width:1px,color:#86efac
+    style SERVICES fill:#1c1917,stroke:#f59e0b,stroke-width:1px,color:#fcd34d
