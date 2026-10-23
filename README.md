@@ -57,32 +57,42 @@ The writing assistant searches the web through Firecrawl, checks claims against 
 ## System Architecture
 
 flowchart TB
-    U[User] --> UI[Web Interface]
-    UI --> AUTH[Authentication REST API]
-    AUTH --> AS[Auth Service]
-    AS --> JPA[Spring Data JPA]
-    JPA --> DB[(PostgreSQL)]
-    AS --> JWT[JWT Bearer Token]
+    U["User"] --> UI["Web Interface"]
+    UI --> AUTH["Authentication REST API"]
+    AUTH --> AS["Auth Service"]
+    AS --> JPA["Spring Data JPA"]
+    JPA --> DB[("PostgreSQL")]
+    AS --> JWT["JWT Bearer Token"]
     JWT --> UI
 
-    UI --> WS[WebSocket Writing Assistant]
-    WS --> VALIDATE[JWT Validation]
-    VALIDATE --> ASSIST[Writing Assistant Service]
-    ASSIST --> DEBOUNCE[Debounce and Stale Result Control]
+    UI --> WS["WebSocket Writing Assistant"]
+    WS --> VALIDATE["JWT Validation"]
+    VALIDATE --> ASSIST["Writing Assistant Service"]
+    ASSIST --> DEBOUNCE["Debounce and Stale Result Control"]
 
-    DEBOUNCE --> SEARCH[Source Search]
-    DEBOUNCE --> FACT[Fact Checking]
-    DEBOUNCE --> GRAMMAR[Grammar and Editing]
+    DEBOUNCE --> SEARCH["Source Search"]
+    DEBOUNCE --> FACT["Fact Checking"]
+    DEBOUNCE --> GRAMMAR["Grammar and Editing"]
 
-    SEARCH --> FC[Firecrawl API]
+    SEARCH --> FC["Firecrawl API"]
     FACT --> FC
-    FC --> WEB[Web Sources]
+    FC --> WEB["Web Search Sources"]
 
-    FACT --> AI[Spring AI]
+    FACT --> AI["Spring AI"]
     GRAMMAR --> AI
-    AI --> OLLAMA[Ollama LLM]
+    AI --> OLLAMA["Ollama LLM"]
 
-    COMPOSE[Docker Compose] -.-> APP[Spring Boot Container]
-    COMPOSE -.-> PG[PostgreSQL Container]
+    COMPOSE["Docker Compose"] -.-> APP["Spring Boot Container"]
+    COMPOSE -.-> PG["PostgreSQL Container"]
     APP -.-> WS
     PG -.-> DB
+
+    classDef frontend fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef backend fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef external fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef database fill:#f3e8ff,stroke:#9333ea,color:#581c87
+
+    class U,UI frontend
+    class AUTH,AS,JWT,WS,VALIDATE,ASSIST,DEBOUNCE,SEARCH,FACT,GRAMMAR backend
+    class FC,WEB,AI,OLLAMA external
+    class JPA,DB database
