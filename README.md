@@ -54,24 +54,35 @@ Registration requires a password of 12 to 64 characters and rejects values excee
 
 The writing assistant searches the web through Firecrawl, checks claims against search sources, and suggests grammar edits using the configured Spring AI chat model. Set `FIRECRAWL_API_KEY` to enable web search; Firecrawl plan limits apply. Make an Ollama server available with the model named by `OLLAMA_MODEL` (default `llama3.2`). With Docker Compose, the app connects to Ollama on the host via `host.docker.internal`; set `OLLAMA_BASE_URL` if yours is elsewhere. The WebSocket endpoint is `/ws/writing-assistant`; connect, send `{"token":"<JWT>"}` as the first message, then send `{"text":"...","action":"ASSIST"}` as the user edits. Supported actions are `ASSIST`, `SEARCH`, `FACT_CHECK`, and `GRAMMAR`. Updates are debounced for one second and stale results are discarded.
 
-REST endpoints require the normal bearer token:
+## System Architecture
 
-- `POST /api/websearch` with `{"text":"...","action":"SEARCH"}` runs a web search.
-- `POST /api/websearch/assist` with `{"text":"...","action":"ASSIST"}` searches and requests writing suggestions.
-- `GET /api/websearch/history` returns the signed-in user's saved REST searches.
+flowchart TB
+    U[User] --> UI[Web Interface]
+    UI --> AUTH[Authentication REST API]
+    AUTH --> AS[Auth Service]
+    AS --> JPA[Spring Data JPA]
+    JPA --> DB[(PostgreSQL)]
+    AS --> JWT[JWT Bearer Token]
+    JWT --> UI
 
-The live WebSocket does not save drafts or keystrokes. REST searches are stored per account. Text sent for search or AI analysis is sent to the configured third-party providers; do not submit sensitive material.
+    UI --> WS[WebSocket Writing Assistant]
+    WS --> VALIDATE[JWT Validation]
+    VALIDATE --> ASSIST[Writing Assistant Service]
+    ASSIST --> DEBOUNCE[Debounce and Stale Result Control]
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 110" width="100%" height="100%">
-  <defs>
-    <linearGradient id="cyberGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="50%" stop-color="#34d399" />
-      <stop offset="100%" stop-color="#06b6d4" />
-    </linearGradient>
-  </defs>
+    DEBOUNCE --> SEARCH[Source Search]
+    DEBOUNCE --> FACT[Fact Checking]
+    DEBOUNCE --> GRAMMAR[Grammar and Editing]
 
-  <text x="15" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" fill="#ffffff" letter-spacing="-1">
-    Pen<tspan fill="url(#cyberGreen)">Buddy</tspan>
-  </text>
-</svg>
+    SEARCH --> FC[Firecrawl API]
+    FACT --> FC
+    FC --> WEB[Web Sources]
+
+    FACT --> AI[Spring AI]
+    GRAMMAR --> AI
+    AI --> OLLAMA[Ollama LLM]
+
+    COMPOSE[Docker Compose] -.-> APP[Spring Boot Container]
+    COMPOSE -.-> PG[PostgreSQL Container]
+    APP -.-> WS
+    PG -.-> DB
